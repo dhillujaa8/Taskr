@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Taskr — Todo App</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --border: #2a2a2a;
+    --accent: #c8f060;
+    --accent2: #60d4f0;
+    --text: #f0ede6;
+    --muted: #666;
+    --done: #3a3a3a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 60px 20px 100px;
+  }
+  header {
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .tagline {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .stats-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 20px;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 500;
+    color: var(--accent);
+  }
+  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* Input */
+  .input-row {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 32px;
+  }
+  .input-row input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 14px 18px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-row input:focus { border-color: var(--accent); }
+  .input-row input::placeholder { color: var(--muted); }
+  .add-btn {
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none;
+    padding: 14px 22px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .add-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .add-btn:active { transform: translateY(0); }
+
+  /* Filters */
+  .filters {
+    width: 100%; max-width: 640px;
+    display: flex; gap: 6px;
+    margin-bottom: 20px;
+  }
+  .filter-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Tasks */
+  .task-list { width: 100%; max-width: 640px; display: flex; flex-direction: column; gap: 6px; }
+  .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    transition: border-color 0.2s, opacity 0.2s;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .task-item:hover { border-color: #444; }
+  .task-item.done { opacity: 0.5; }
+  .check-box {
+    width: 20px; height: 20px;
+    border: 1.5px solid var(--border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .check-box:hover { border-color: var(--accent); }
+  .check-box.checked { background: var(--accent); border-color: var(--accent); }
+  .check-box.checked::after { content: '✓'; color: #0d0d0d; font-size: 12px; font-weight: bold; }
+  .task-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .task-item.done .task-text { text-decoration: line-through; color: var(--muted); }
+  .task-meta {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .task-time { font-size: 10px; color: var(--muted); }
+  .del-btn {
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    font-size: 16px; line-height: 1;
+    padding: 2px 4px;
+    transition: color 0.15s;
+  }
+  .del-btn:hover { color: #ff5555; }
+  .empty {
+    text-align: center; color: var(--muted);
+    font-size: 13px; padding: 60px 0;
+    letter-spacing: 1px;
+  }
+  .priority-badge {
+    font-size: 9px; letter-spacing: 1px;
+    padding: 2px 7px;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+  .p-high { color: #ff5555; border-color: #ff5555; }
+  .p-med { color: var(--accent2); border-color: var(--accent2); }
+  .p-low { color: var(--accent); border-color: var(--accent); }
+
+  .priority-select {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 11px; padding: 14px 10px;
+    outline: none; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== SIMULATED BACKEND =====================
+  In a real full-stack app, this would be a Node.js/Express server.
+  Here we simulate REST API endpoints as JS functions.
+
+  API Routes (simulated):
+    GET    /api/todos         → getTodos()
+    POST   /api/todos         → createTodo(data)
+    PATCH  /api/todos/:id     → updateTodo(id, data)
+    DELETE /api/todos/:id     → deleteTodo(id)
+================================================================= -->
+<script>
+// ─── BACKEND (Simulated Node.js + Express + In-Memory DB) ───────────────────
+const DB = {
+  todos: [
+    { id: 1, text: "Build a full-stack project", priority: "high", done: true,  createdAt: new Date(Date.now()-86400000).toISOString() },
+    { id: 2, text: "Set up Express REST API",    priority: "high", done: true,  createdAt: new Date(Date.now()-72000000).toISOString() },
+    { id: 3, text: "Connect MongoDB database",   priority: "med",  done: false, createdAt: new Date(Date.now()-3600000).toISOString()  },
+    { id: 4, text: "Deploy to Vercel",           priority: "low",  done: false, createdAt: new Date().toISOString()                    },
+  ],
+  nextId: 5,
+};
+
+// Simulated API — replace with fetch('/api/todos') in a real app
+const API = {
+  getTodos: () => Promise.resolve([...DB.todos]),
+
+  createTodo: (data) => {
+    const todo = { id: DB.nextId++, ...data, done: false, createdAt: new Date().toISOString() };
+    DB.todos.unshift(todo);
+    return Promise.resolve(todo);
+  },
+
+  updateTodo: (id, patch) => {
+    const idx = DB.todos.findIndex(t => t.id === id);
+    if (idx === -1) return Promise.reject('Not found');
+    DB.todos[idx] = { ...DB.todos[idx], ...patch };
+    return Promise.resolve(DB.todos[idx]);
+  },
+
+  deleteTodo: (id) => {
+    DB.todos = DB.todos.filter(t => t.id !== id);
+    return Promise.resolve({ deleted: id });
+  },
+};
+// ─── END BACKEND ─────────────────────────────────────────────────────────────
+
+
+// ─── FRONTEND ─────────────────────────────────────────────────────────────────
+let todos = [];
+let filter = 'all';
+
+async function init() {
+  todos = await API.getTodos();
+  render();
+}
+
+function render() {
+  const visible = todos.filter(t => {
+    if (filter === 'active') return !t.done;
+    if (filter === 'done')   return t.done;
+    return true;
+  });
+
+  const total   = todos.length;
+  const done    = todos.filter(t => t.done).length;
+  const active  = total - done;
+
+  document.getElementById('stat-total').textContent  = total;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-done').textContent   = done;
+
+  const list = document.getElementById('task-list');
+  if (visible.length === 0) {
+    list.innerHTML = `<div class="empty">— no tasks here —</div>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(t => `
+    <div class="task-item ${t.done ? 'done' : ''}" id="task-${t.id}">
+      <div class="check-box ${t.done ? 'checked' : ''}" onclick="toggleTodo(${t.id})"></div>
+      <span class="task-text">${escapeHtml(t.text)}</span>
+      <div class="task-meta">
+        <span class="priority-badge p-${t.priority}">${t.priority}</span>
+        <span class="task-time">${formatTime(t.createdAt)}</span>
+        <button class="del-btn" onclick="deleteTodo(${t.id})">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function addTodo() {
+  const input = document.getElementById('todo-input');
+  const priority = document.getElementById('priority-select').value;
+  const text = input.value.trim();
+  if (!text) return;
+  await API.createTodo({ text, priority });
+  todos = await API.getTodos();
+  input.value = '';
+  render();
+}
+
+async function toggleTodo(id) {
+  const todo = todos.find(t => t.id === id);
+  await API.updateTodo(id, { done: !todo.done });
+  todos = await API.getTodos();
+  render();
+}
+
+async function deleteTodo(id) {
+  await API.deleteTodo(id);
+  todos = await API.getTodos();
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
+  render();
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('todo-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+  init();
+});
+</script>
+
+<!-- ─── MARKUP ──────────────────────────────────────────────────────────────── -->
+<header>
+  <div class="logo">Taskr</div>
+  <div class="tagline">Full-Stack Todo · REST API + In-Memory DB</div>
+  <div class="stats-row">
+    <div class="stat"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total</span></div>
+    <div class="stat"><span class="stat-num" id="stat-active">0</span><span class="stat-label">Active</span></div>
+    <div class="stat"><span class="stat-num" id="stat-done">0</span><span class="stat-label">Done</span></div>
+  </div>
+</header>
+
+<div class="input-row">
+  <input id="todo-input" type="text" placeholder="Add a new task…" />
+  <select id="priority-select" class="priority-select">
+    <option value="low">Low</option>
+    <option value="med" selected>Med</option>
+    <option value="high">High</option>
+  </select>
+  <button class="add-btn" onclick="addTodo()">+ ADD</button>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" data-filter="all"    onclick="setFilter('all')">All</button>
+  <button class="filter-btn"        data-filter="active" onclick="setFilter('active')">Active</button>
+  <button class="filter-btn"        data-filter="done"   onclick="setFilter('done')">Done</button>
+</div>
+
+<div class="task-list" id="task-list"></div>
+
+</body>
+</html>
